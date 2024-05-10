@@ -9,11 +9,11 @@ use Illuminate\Http\Request;
  *    title="Hygge Cosmetic API",
  *    version="1.0.0",
  * )
- * @OA\SecuritySchema(
- *  type="http",
- *  securitySchema="bearerAuth",
- *  schema="bearer",
- *  bearerFormat="JWT"
+ * @OA\SecurityScheme(
+ *     securityScheme="bearerAuth",
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT"
  * )
  */
 class BaseController extends Controller

@@ -8,14 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-/**
- * @OA\SecurityScheme(
- *     securityScheme="bearerAuth",
- *     type="http",
- *     scheme="bearer",
- *     bearerFormat="JWT"
- * )
- */
+
 class CategoryController extends BaseController
 {
     /**
@@ -92,6 +85,121 @@ class CategoryController extends BaseController
             //throw $th;
             Log::error($th);
             return $this->sendError('An error occurred during create category', [], 500);
+        }
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/v1/admin/categories/{id}",
+     *     operationId="deleteCategory",
+     *     tags={"Category"},
+     *     summary="Delete a category",
+     *     description="Delete a category",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *          description="ID of Category",
+     *          in="path",
+     *          name="id",
+     *          required=true,
+     *          example="1",
+     *          @OA\Schema(
+     *              type="integer",
+     *              format="int64"
+     *          )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Delete category successfully.",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function destroy($id)
+    {
+        try {
+            $category = Category::where('id', $id)->first();
+
+            if($category){
+                $category->delete();
+                return $this->sendResponse($category['id'], 'Delete category successfully.');
+            }
+
+            return $this->sendError('Category not found',[], 404);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th);
+            return $this->sendError('An error occurred during delete category', [], 500);
+        }
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/v1/admin/categories/{id}",
+     *     operationId="updateCategory",
+     *     tags={"Category"},
+     *     summary="Update a category",
+     *     description="Update a category",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *          description="ID of Category",
+     *          in="path",
+     *          name="id",
+     *          required=true,
+     *          example="1",
+     *          @OA\Schema(
+     *              type="integer",
+     *              format="int64"
+     *          )
+     *     ),
+     *     @OA\RequestBody(
+     *         @OA\MediaType(
+     *            mediaType="application/json",
+     *            @OA\Schema(
+     *               type="object",
+     *               required={"name"},
+     *               @OA\Property(property="name", type="text", example="")
+     *            ),
+     *        ),
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Update category successfully.",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function update(Request $request, $id){
+        try {
+            $category = Category::where('id', $id)->first();
+
+            if(!$category){
+                return $this->sendError('Category not found.', [], 404);
+            }
+
+            $body = $request->all();
+            $validated = Validator::make($body, [
+                'name' => 'required|min:3'
+            ]);
+
+            if($validated->fails()){
+                return $this->sendError('Validation error.', $validated->errors(), 400);
+            }
+
+            $category->name = $body['name'];
+            $category->save();
+            return $this->sendResponse($category, 'Update category successfully.');
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th);
+            return $this->sendError('An error occurred during update category', [], 500);
         }
     }
 }
