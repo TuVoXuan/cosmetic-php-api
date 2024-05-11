@@ -20,5 +20,7 @@ Route::prefix('v1')->group(function(){
 
         Route::get('admin/brands', [BrandController::class, 'index']);
         Route::post('admin/brands', [BrandController::class, 'store']);
+        Route::post('admin/brands/{id}', [BrandController::class, 'update']);
+        Route::delete('admin/brands/{id}', [BrandController::class, 'destroy']);
     });    
 });
