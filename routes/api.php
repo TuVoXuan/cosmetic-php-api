@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,5 +23,10 @@ Route::prefix('v1')->group(function(){
         Route::post('admin/brands', [BrandController::class, 'store']);
         Route::post('admin/brands/{id}', [BrandController::class, 'update']);
         Route::delete('admin/brands/{id}', [BrandController::class, 'destroy']);
+
+        Route::get('admin/products', [ProductController::class, 'index']);
+        Route::post('admin/products', [ProductController::class, 'create']);
+        Route::post('admin/products/{id}', [ProductController::class, 'update']);
+        Route::delete('admin/products/{id}', [ProductController::class, 'destroy']);
     });    
 });
