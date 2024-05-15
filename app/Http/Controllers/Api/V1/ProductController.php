@@ -10,7 +10,6 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +25,62 @@ class ProductController extends BaseController
 	 *     summary="Get all products",
 	 *     description="Get all products",
 	 *     security={{"bearerAuth":{}}},
+	 *     @OA\Parameter(
+	 *         description="Search keyword",
+	 *         in="query",
+	 *         name="search",
+	 *         @OA\Schema(
+	 *             type="string"
+	 *         )
+	 *     ),
+	 *     @OA\Parameter(
+	 *         description="Category",
+	 *         in="query",
+	 *         name="category",
+	 *         @OA\Schema(
+	 *             type="string"
+	 *         )
+	 *     ),
+	 *     @OA\Parameter(
+	 *         description="Brand",
+	 *         in="query",
+	 *         name="brand",
+	 *         @OA\Schema(
+	 *             type="string"
+	 *         )
+	 *     ),
+	 *     @OA\Parameter(
+	 *         description="Sort",
+	 *         in="query",
+	 *         name="sort",
+	 *         @OA\Schema(
+	 *             type="string"
+	 *         )
+	 *     ),
+	 *     @OA\Parameter(
+	 *         description="Sort direction",
+	 *         in="query",
+	 *         name="sort_direction",
+	 *         @OA\Schema(
+	 *             type="string"
+	 *         )
+	 *     ),
+	 *     @OA\Parameter(
+	 *         description="Limit",
+	 *         in="query",
+	 *         name="limit",
+	 *         @OA\Schema(
+	 *             type="string"
+	 *         )
+	 *     ),
+	 *     @OA\Parameter(
+	 *         description="Page",
+	 *         in="query",
+	 *         name="page",
+	 *         @OA\Schema(
+	 *             type="string"
+	 *         )
+	 *     ),
 	 *     @OA\Response(
 	 *         response=200,
 	 *         description="Get products successfully",
@@ -37,9 +92,48 @@ class ProductController extends BaseController
 	 *     )
 	 * )
 	 */
-	public function index()
+	public function index(Request $request)
 	{
-		return $this->sendResponse(Product::all(), 'Get products successfully.');
+		try {
+			$query = Product::query();
+
+			$search = $request->query('search');
+			$limit = $request->query('limit', 10);
+			$page = $request->query('page', 0);
+			$category = $request->query('category');
+			$brand = $request->query('brand');
+			$sort = $request->query('sort');
+			$sort_direction = $request->query('sort_direction', 'asc');
+
+			if ($category) {
+				$query->where('category_id', $category);
+			}
+
+			if ($brand) {
+				$query->where('brand_id', $brand);
+			}
+
+			if ($search) {
+				$query->whereRaw("name LIKE '%" . $search . "%'");
+			}
+
+			if ($sort) {
+				$query->orderBy($sort, $sort_direction);
+			}
+
+			$total = $query->count();
+			$query->limit($limit)->offset($page * $limit);
+
+			$response = [
+				'total' => $total,
+				'data' => ProductResource::collection($query->get())
+			];
+
+			return $this->sendResponse($response, 'Get products successfully.');
+		} catch (\Exception $e) {
+			Log::error($e);
+			return $this->sendError($e->getMessage(), [], Response::HTTP_INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	/**
@@ -321,22 +415,23 @@ class ProductController extends BaseController
 	 *     )
 	 * )
 	 */
-	public function destroy($id){
+	public function destroy($id)
+	{
 		try {
 			$product = Product::with('thumbnail', 'images')->where('id', $id)->first();
 
-			if(!$product){
+			if (!$product) {
 				return $this->sendError('Product not found.', [], Response::HTTP_NOT_FOUND);
 			}
 
 			Cloudinary::destroy($product->thumbnail->public_id);
 
-			foreach($product->images as $image){
+			foreach ($product->images as $image) {
 				Cloudinary::destroy($image->public_id);
 			}
 
 			$product->delete();
-			
+
 			return $this->sendResponse($id, 'Delete product successfully.');
 		} catch (\Exception $e) {
 			Log::error($e);
