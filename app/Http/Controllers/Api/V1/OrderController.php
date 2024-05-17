@@ -194,4 +194,19 @@ class OrderController extends BaseController
 			return $this->sendError($e->getMessage(), [], Response::HTTP_INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	public function destroy($id){
+		try {
+			$order = Order::find($id);
+			if(!$order){
+				return $this->sendError('Order not found.', [], Response::HTTP_NOT_FOUND);
+			}
+
+			$order->delete();
+			return $this->sendResponse($id, 'Delete order successfully.');
+		} catch (\Exception $e) {
+			Log::error($e);
+			return $this->sendError($e->getMessage(), [], Response::HTTP_INTERNAL_SERVER_ERROR);
+		}
+	}
 }

@@ -27,12 +27,13 @@ Route::prefix('v1')->group(function(){
         Route::delete('admin/brands/{id}', [BrandController::class, 'destroy'])->middleware('permission:brand.delete');
 
         Route::get('admin/products', [ProductController::class, 'index'])->middleware('permission:product.read');
-        Route::post('admin/products', [ProductController::class, 'create'])->middleware('product.create');
+        Route::post('admin/products', [ProductController::class, 'create'])->middleware('permission:product.create');
         Route::post('admin/products/{id}', [ProductController::class, 'update'])->middleware('permission:product.update');
         Route::delete('admin/products/{id}', [ProductController::class, 'destroy'])->middleware('permission:product.delete');
 
         Route::get('admin/orders', [OrderController::class, 'index']);
         Route::post('orders', [OrderController::class, 'create']);
         Route::put('admin/orders/{id}', [OrderController::class, 'updateStatus']);
+        Route::delete('admin/orders/{id}', [OrderController::class, 'destroy']);
     });    
 });
