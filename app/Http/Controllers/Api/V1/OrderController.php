@@ -7,6 +7,7 @@ use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\OrderStatus;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
@@ -14,13 +15,16 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class OrderController extends BaseController
 {
-	public function index(Request $request){
+	public function index(Request $request)
+	{
 		try {
 			$limit = $request->query('limit');
 			$page = $request->query('page');
+			$status = $request->query('status');
 			$from_date = $request->query('from_date');
 			$end_date = $request->query('end_date');
 			$sort = $request->query('sort');
@@ -28,14 +32,18 @@ class OrderController extends BaseController
 
 			$query = Order::query();
 
-			if($from_date && $end_date){
+			if ($status) {
+				$query->where('status', $status);
+			}
+
+			if ($from_date && $end_date) {
 				$query->whereBetween('order_date', [
 					Carbon::parse($from_date)->startOfDay(),
 					Carbon::parse($end_date)->endOfDay()
 				]);
 			}
 
-			if($sort){
+			if ($sort) {
 				$query->orderBy($sort, $sort_direction);
 			}
 
@@ -125,6 +133,7 @@ class OrderController extends BaseController
 					'user_id' => auth()->user()->id,
 					'total_amount' => $total_amount,
 					'order_date' => now(),
+					'status' => OrderStatus::Pending
 				]);
 
 				$storedOrderItems = [];
@@ -132,7 +141,7 @@ class OrderController extends BaseController
 				foreach ($orderItems as $orderItem) {
 					$product = Product::find($orderItem['product_id']);
 					$product->update(['quantity' => $product->quantity - $orderItem['quantity']]);
-					
+
 					$orderItem['order_id'] = $order->id;
 					$storedOrderItems[] = OrderItem::create($orderItem);
 				}
@@ -142,6 +151,43 @@ class OrderController extends BaseController
 				return $this->sendResponse($order, 'Create order successfully.');
 			} else {
 				return $this->sendError('Insufficient product quantity in stock.', [], Response::HTTP_BAD_REQUEST);
+			}
+		} catch (\Exception $e) {
+			Log::error($e);
+			return $this->sendError($e->getMessage(), [], Response::HTTP_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	public function updateStatus(Request $request, $id)
+	{
+		try {
+			$body = $request->all();
+			$validated = Validator::make($body, [
+				'status' => ['required', Rule::enum(OrderStatus::class)]
+			]);
+
+			if ($validated->fails()) {
+				return $this->sendError('Validation Error.', $validated->errors(), Response::HTTP_BAD_REQUEST);
+			}
+
+			$order = Order::find($id);
+			if (!$order) {
+				return $this->sendError('Order not found.', [], Response::HTTP_NOT_FOUND);
+			}
+
+			Log::info(OrderStatus::Pending->value);
+
+			if (($order->status == OrderStatus::Pending && $body['status'] == OrderStatus::Processing->value) ||
+				($order->status == OrderStatus::Pending && $body['status'] == OrderStatus::Cancelled->value) ||
+				($order->status == OrderStatus::Processing && $body['status'] == OrderStatus::Delivering->value) ||
+				($order->status == OrderStatus::Delivering && $body['status'] == OrderStatus::Completed->value)
+			) {
+				$order->status = $body['status'];
+				$order->save();
+
+				return $this->sendResponse('', 'Update order status successfully.');
+			} else {
+				return $this->sendError('Invalid step update order status.', [], Response::HTTP_BAD_REQUEST);
 			}
 		} catch (\Exception $e) {
 			Log::error($e);

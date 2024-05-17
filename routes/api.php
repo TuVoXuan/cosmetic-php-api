@@ -32,6 +32,7 @@ Route::prefix('v1')->group(function(){
         Route::delete('admin/products/{id}', [ProductController::class, 'destroy'])->middleware('permission:product.delete');
 
         Route::get('admin/orders', [OrderController::class, 'index']);
-        Route::post('admin/orders', [OrderController::class, 'create']);
+        Route::post('orders', [OrderController::class, 'create']);
+        Route::put('admin/orders/{id}', [OrderController::class, 'updateStatus']);
     });    
 });

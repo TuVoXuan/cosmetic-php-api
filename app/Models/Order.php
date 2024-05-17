@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\OrderStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,7 +13,12 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'total_amount',
-        'order_date'
+        'order_date',
+        'status'
+    ];
+
+    protected $casts = [
+        'status' => OrderStatus::class
     ];
 
     public function user() {
