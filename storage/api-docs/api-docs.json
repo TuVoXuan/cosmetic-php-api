@@ -465,6 +465,64 @@
                 ]
             }
         },
+        "/api/v1/admin/orders": {
+            "post": {
+                "tags": [
+                    "Order"
+                ],
+                "summary": "Create a order",
+                "description": "Create a order",
+                "operationId": "createOrder",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "cart_items"
+                                ],
+                                "properties": {
+                                    "cart_items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "product_id": {
+                                                    "type": "text",
+                                                    "example": ""
+                                                },
+                                                "quantity": {
+                                                    "type": "text",
+                                                    "example": ""
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Create product successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/admin/products": {
             "get": {
                 "tags": [

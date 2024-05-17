@@ -75,4 +75,8 @@ class User extends Authenticatable implements JWTSubject
     public function hasPermission($permission_code){
         return $this->role->permissions->contains('code', $permission_code);
     }
+
+    public function orders(){
+        return $this->hasMany(Order::class);
+    }
 }

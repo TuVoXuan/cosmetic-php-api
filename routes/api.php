@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Middleware\Permission;
 use Illuminate\Http\Request;
@@ -29,5 +30,8 @@ Route::prefix('v1')->group(function(){
         Route::post('admin/products', [ProductController::class, 'create'])->middleware('product.create');
         Route::post('admin/products/{id}', [ProductController::class, 'update'])->middleware('permission:product.update');
         Route::delete('admin/products/{id}', [ProductController::class, 'destroy'])->middleware('permission:product.delete');
+
+        Route::get('admin/orders', [OrderController::class, 'index']);
+        Route::post('admin/orders', [OrderController::class, 'create']);
     });    
 });
